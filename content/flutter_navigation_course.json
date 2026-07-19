@@ -1,0 +1,390 @@
+{
+  "course_title": "Flutter Navigation",
+  "course_description": "A two-part course covering navigation in Flutter: first the built-in Navigator system (routes, push/pop, bottom navigation, tabs), then the modern declarative GoRouter package (route configuration, parameters, nested navigation with ShellRoute).",
+  "prerequisites": "Flutter Static UI and Flutter Dynamic UI courses (widgets, layout, StatefulWidget, setState, forms)",
+  "format_notes": "Each concept has an 'explanation' and 'example' field optimized for AI consumption. Each module ends with a 'practice' exercise. The course is split into two parts; a Final Mini Project combines everything from Part 2.",
+  "parts": [
+    {
+      "part_number": 1,
+      "title": "Built-in Navigation",
+      "modules": [
+        {
+          "module_number": 1,
+          "title": "Introduction to Navigation",
+          "concepts": [
+            {
+              "name": "What is navigation?",
+              "explanation": "Navigation is how an app moves the user between different screens (also called pages or routes). Instead of one screen doing everything, an app is broken into focused screens, and navigation is the mechanism for transitioning between them.",
+              "example": "Tapping a product in a list to open its details screen, or tapping 'Sign In' to move from a login screen to a home screen, are both navigation events."
+            },
+            {
+              "name": "Navigation stack",
+              "explanation": "Flutter manages screens using a stack data structure: the current screen is on top, and navigating to a new screen pushes it on top of the stack, while going back pops it off, revealing the previous screen underneath.",
+              "example": "Stack after opening Home then Profile: [Home, Profile] (Profile on top). Going back pops Profile, leaving [Home]."
+            },
+            {
+              "name": "Routes and screens",
+              "explanation": "A route represents a single entry on the navigation stack, typically corresponding to one screen/page widget. Each route can carry its own settings and data, and is what Navigator pushes and pops.",
+              "example": "A route wrapping a ProfilePage widget represents the 'Profile screen' entry on the stack."
+            },
+            {
+              "name": "Navigator",
+              "explanation": "Navigator is the widget that manages the stack of routes for an app (or a nested part of it). It exposes methods like push() and pop() to move between routes, and is usually already provided by MaterialApp.",
+              "example": "Navigator.push(context, route); // adds a new screen on top\nNavigator.pop(context); // removes the current screen"
+            },
+            {
+              "name": "MaterialPageRoute",
+              "explanation": "MaterialPageRoute is a ready-made route type that provides the platform-appropriate transition animation (e.g. slide-in on Android) when navigating to a new screen built with a given widget.",
+              "example": "Navigator.push(\n  context,\n  MaterialPageRoute(builder: (context) => SecondScreen()),\n);"
+            }
+          ],
+          "practice": {
+            "title": "Two-Screen Navigation",
+            "description": "Create two screens and navigate between them using a button.",
+            "builds_on_previous_practice": null,
+            "requirements": [
+              "Create a FirstScreen with a button labeled 'Go to Second Screen'.",
+              "Create a SecondScreen with a button labeled 'Go Back'.",
+              "On FirstScreen's button press, use Navigator.push() with a MaterialPageRoute to open SecondScreen.",
+              "On SecondScreen's button press, use Navigator.pop() to return to FirstScreen."
+            ],
+            "hint": "Wrap each screen in its own Scaffold so each has its own AppBar/body."
+          }
+        },
+        {
+          "module_number": 2,
+          "title": "Navigator Basics",
+          "concepts": [
+            {
+              "name": "Navigator.push()",
+              "explanation": "Navigator.push() adds a new route on top of the current stack, navigating forward to a new screen while keeping the previous screen underneath so the user can return to it.",
+              "example": "Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilePage()));"
+            },
+            {
+              "name": "Navigator.pop()",
+              "explanation": "Navigator.pop() removes the current (topmost) route from the stack, returning to the screen beneath it. It can optionally carry a result value back to the screen that pushed it.",
+              "example": "Navigator.pop(context); // just go back\nNavigator.pop(context, 'some result'); // go back with data"
+            },
+            {
+              "name": "Navigator.pushReplacement()",
+              "explanation": "Navigator.pushReplacement() replaces the current route with a new one instead of stacking on top of it, so the replaced screen is not reachable by pressing back \u2014 useful after login, where you don't want users returning to the login screen.",
+              "example": "Navigator.pushReplacement(\n  context,\n  MaterialPageRoute(builder: (_) => HomePage()),\n);"
+            },
+            {
+              "name": "Navigator.pushAndRemoveUntil()",
+              "explanation": "Navigator.pushAndRemoveUntil() pushes a new route and removes all previous routes that match a given predicate, commonly used to clear the entire navigation history (e.g. after logout, so back doesn't return into a previous session).",
+              "example": "Navigator.pushAndRemoveUntil(\n  context,\n  MaterialPageRoute(builder: (_) => LoginPage()),\n  (route) => false, // removes every previous route\n);"
+            },
+            {
+              "name": "Passing data between screens",
+              "explanation": "Data can be passed forward to a new screen simply by giving it as a constructor argument to the widget being pushed.",
+              "example": "Navigator.push(\n  context,\n  MaterialPageRoute(builder: (_) => ProfilePage(username: 'islam')),\n);"
+            },
+            {
+              "name": "Returning data using Navigator.pop(result)",
+              "explanation": "To send data back to the screen that triggered navigation, pass a value to Navigator.pop(), and await the original Navigator.push() call to receive it.",
+              "example": "// On the screen that pushed:\nfinal result = await Navigator.push(context, MaterialPageRoute(builder: (_) => ProfilePage()));\n\n// On ProfilePage, when done:\nNavigator.pop(context, 'newUsername');"
+            }
+          ],
+          "practice": {
+            "title": "Simple Login Flow",
+            "description": "Build a login flow using push, pushReplacement, and returning data with pop.",
+            "builds_on_previous_practice": "Reuses the two-screen push/pop pattern from Module 1.",
+            "requirements": [
+              "Build a LoginPage with a 'Log In' button that navigates to HomePage using Navigator.pushReplacement() (so Login isn't reachable via back button).",
+              "On HomePage, add a button that navigates to ProfilePage using Navigator.push().",
+              "On ProfilePage, let the user pick or type a username, then return it to HomePage via Navigator.pop(username).",
+              "On HomePage, await the push() call and display the returned username once ProfilePage is popped."
+            ],
+            "hint": "Use `final result = await Navigator.push(...)` on HomePage to capture the value returned from ProfilePage."
+          }
+        },
+        {
+          "module_number": 3,
+          "title": "Bottom Navigation Bar",
+          "concepts": [
+            {
+              "name": "BottomNavigationBar",
+              "explanation": "BottomNavigationBar is a Material widget showing a row of tappable icons/labels fixed to the bottom of the screen, letting users switch between top-level sections of an app.",
+              "example": "BottomNavigationBar(\n  currentIndex: selectedIndex,\n  onTap: (index) => setState(() => selectedIndex = index),\n  items: [\n    BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),\n    BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favorites'),\n    BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),\n  ],\n)"
+            },
+            {
+              "name": "Managing the selected index",
+              "explanation": "The currently active tab is tracked as an integer state variable; tapping an item updates that variable with setState(), which in turn determines which page body is shown.",
+              "example": "int selectedIndex = 0;\n\nvoid onTabTapped(int index) {\n  setState(() => selectedIndex = index);\n}"
+            },
+            {
+              "name": "Switching between pages",
+              "explanation": "The Scaffold's body typically displays whichever page corresponds to the current selectedIndex, commonly using a List<Widget> of pages indexed by that value.",
+              "example": "final pages = [HomePage(), FavoritesPage(), ProfilePage()];\n\nScaffold(\n  body: pages[selectedIndex],\n  bottomNavigationBar: BottomNavigationBar(...),\n)"
+            },
+            {
+              "name": "Preserving page state with IndexedStack",
+              "explanation": "Directly swapping body: pages[selectedIndex] rebuilds a fresh page each time, losing scroll position or other in-page state. IndexedStack keeps all pages built simultaneously (stacked), only showing the one at the given index, so switching tabs preserves each page's state.",
+              "example": "IndexedStack(\n  index: selectedIndex,\n  children: [HomePage(), FavoritesPage(), ProfilePage()],\n)"
+            },
+            {
+              "name": "When to use Bottom Navigation",
+              "explanation": "Bottom Navigation suits apps with a small number (typically 3-5) of top-level, equally important destinations that users jump between frequently, rather than a linear flow (which suits push/pop navigation instead).",
+              "example": "A shopping app with Home, Favorites, and Profile as parallel sections is a good fit for Bottom Navigation, rather than treating Favorites as a screen you push on top of Home."
+            }
+          ],
+          "practice": {
+            "title": "Shopping App Tabs",
+            "description": "Build a shopping app with three tabs, preserving each tab's state when switching.",
+            "builds_on_previous_practice": "Uses the setState/StatefulWidget patterns established in the Dynamic UI course.",
+            "requirements": [
+              "Create a StatefulWidget shell with a BottomNavigationBar containing Home, Favorites, and Profile items.",
+              "Track the selected tab index in state, updating it via onTap with setState().",
+              "Display the current page using IndexedStack instead of directly swapping widgets, so state (e.g. scroll position) isn't lost.",
+              "Confirm that scrolling down on Home, switching to Favorites, then switching back to Home preserves the scroll position."
+            ],
+            "hint": "IndexedStack(index: selectedIndex, children: [HomePage(), FavoritesPage(), ProfilePage()]) inside the Scaffold body."
+          }
+        },
+        {
+          "module_number": 4,
+          "title": "Tab Navigation",
+          "concepts": [
+            {
+              "name": "DefaultTabController",
+              "explanation": "DefaultTabController provides a shared TabController to its descendant TabBar and TabBarView widgets without you needing to manually create and manage one, based on a given length (number of tabs).",
+              "example": "DefaultTabController(\n  length: 3,\n  child: Scaffold(\n    appBar: AppBar(bottom: TabBar(tabs: [...])),\n    body: TabBarView(children: [...]),\n  ),\n)"
+            },
+            {
+              "name": "TabBar",
+              "explanation": "TabBar displays a row of selectable tab headers (often placed inside an AppBar's bottom property), letting the user switch between the tabs of a DefaultTabController.",
+              "example": "TabBar(\n  tabs: [\n    Tab(text: 'Sports'),\n    Tab(text: 'Technology'),\n    Tab(text: 'Business'),\n  ],\n)"
+            },
+            {
+              "name": "TabBarView",
+              "explanation": "TabBarView displays the content for whichever tab is currently selected, swiping horizontally between pages in sync with the TabBar above it.",
+              "example": "TabBarView(\n  children: [\n    SportsPage(),\n    TechnologyPage(),\n    BusinessPage(),\n  ],\n)"
+            },
+            {
+              "name": "Customizing tabs",
+              "explanation": "Tabs can include icons alongside or instead of text, and their appearance (colors, indicator style) can be customized via TabBar properties like labelColor, indicatorColor, and unselectedLabelColor.",
+              "example": "TabBar(\n  labelColor: Colors.blue,\n  unselectedLabelColor: Colors.grey,\n  indicatorColor: Colors.blue,\n  tabs: [Tab(icon: Icon(Icons.sports), text: 'Sports'), ...],\n)"
+            },
+            {
+              "name": "Tab navigation vs Bottom Navigation",
+              "explanation": "TabBar/TabBarView is typically used for sub-sections within a single top-level screen (e.g. categories within a News screen) and supports horizontal swipe gestures, while BottomNavigationBar is used for top-level app sections and does not swipe between them by default.",
+              "example": "A News screen with Sports/Technology/Business categories fits TabBar, while Home/Favorites/Profile as separate app sections fits BottomNavigationBar."
+            }
+          ],
+          "practice": {
+            "title": "News Screen Tabs",
+            "description": "Create a news screen with three tabs: Sports, Technology, and Business.",
+            "builds_on_previous_practice": null,
+            "requirements": [
+              "Wrap the news screen in a DefaultTabController with length: 3.",
+              "Add a TabBar (inside the AppBar's bottom) with tabs labeled Sports, Technology, and Business.",
+              "Add a TabBarView with three corresponding pages, each showing placeholder content for that category.",
+              "Confirm you can switch categories both by tapping a tab and by swiping horizontally."
+            ],
+            "hint": "DefaultTabController's length must match both the number of Tab widgets in TabBar and the number of children in TabBarView."
+          }
+        }
+      ]
+    },
+    {
+      "part_number": 2,
+      "title": "Navigation with GoRouter",
+      "modules": [
+        {
+          "module_number": 1,
+          "title": "Introduction to GoRouter",
+          "concepts": [
+            {
+              "name": "Why use GoRouter?",
+              "explanation": "As apps grow, imperative Navigator.push()/pop() calls scattered throughout the code become hard to manage, especially for deep links, web URLs, and nested navigation. GoRouter offers a centralized, declarative way to define all routes in one place.",
+              "example": "Instead of manually pushing MaterialPageRoutes everywhere, GoRouter lets you define all app routes ('/', '/login', '/product/:id') in a single configuration."
+            },
+            {
+              "name": "Declarative navigation",
+              "explanation": "In declarative navigation, you describe the set of possible routes and the current location/state, and the router figures out what stack of screens to display \u2014 rather than imperatively pushing and popping routes step by step.",
+              "example": "Navigating declaratively means writing context.go('/home') and letting GoRouter determine the resulting screen, rather than manually constructing a MaterialPageRoute and calling push()."
+            },
+            {
+              "name": "Setting up GoRouter",
+              "explanation": "Setting up GoRouter involves adding the go_router package and creating a GoRouter instance describing your app's routes, which is then supplied to your app widget.",
+              "example": "// pubspec.yaml\ndependencies:\n  go_router: ^latest"
+            },
+            {
+              "name": "Creating the router configuration",
+              "explanation": "The router configuration is a GoRouter instance listing every GoRoute in the app: its path and the widget (builder) to display for that path.",
+              "example": "final router = GoRouter(\n  routes: [\n    GoRoute(path: '/', builder: (context, state) => HomeScreen()),\n    GoRoute(path: '/about', builder: (context, state) => AboutScreen()),\n  ],\n);"
+            },
+            {
+              "name": "MaterialApp.router",
+              "explanation": "MaterialApp.router is a variant of MaterialApp designed to work with a router configuration (like GoRouter) instead of a simple home widget, wiring up route parsing and navigation for you.",
+              "example": "MaterialApp.router(\n  routerConfig: router,\n);"
+            }
+          ],
+          "practice": {
+            "title": "Home & About with GoRouter",
+            "description": "Configure GoRouter and navigate between Home and About screens.",
+            "builds_on_previous_practice": null,
+            "requirements": [
+              "Add the go_router package to the project.",
+              "Create a GoRouter instance with two GoRoutes: '/' for HomeScreen and '/about' for AboutScreen.",
+              "Replace MaterialApp with MaterialApp.router, passing the GoRouter instance as routerConfig.",
+              "Add a button on HomeScreen that navigates to '/about', and a button on AboutScreen that navigates back to '/'."
+            ],
+            "hint": "You'll use context.go() for these navigations, covered in detail in the next module."
+          }
+        },
+        {
+          "module_number": 2,
+          "title": "Basic Navigation with GoRouter",
+          "concepts": [
+            {
+              "name": "GoRoute",
+              "explanation": "GoRoute defines a single route in GoRouter's configuration: a path pattern and a builder function that returns the widget to show for that path. Routes can also be nested inside one another.",
+              "example": "GoRoute(\n  path: '/login',\n  name: 'login',\n  builder: (context, state) => LoginScreen(),\n)"
+            },
+            {
+              "name": "Initial location",
+              "explanation": "The initialLocation property on GoRouter specifies which path the app should display when it first launches, if not the default '/'.",
+              "example": "GoRouter(\n  initialLocation: '/splash',\n  routes: [...],\n)"
+            },
+            {
+              "name": "context.go()",
+              "explanation": "context.go() navigates to a given path, replacing the current navigation stack with the new location \u2014 it does not add to a back-stack the way push does.",
+              "example": "context.go('/home');"
+            },
+            {
+              "name": "context.push()",
+              "explanation": "context.push() navigates to a given path by pushing it onto the stack on top of the current screen, preserving the ability to go back to where you came from \u2014 analogous to Navigator.push().",
+              "example": "context.push('/profile');"
+            },
+            {
+              "name": "context.pop()",
+              "explanation": "context.pop() removes the current route from the stack (when it was reached via push), returning to the previous screen \u2014 analogous to Navigator.pop().",
+              "example": "context.pop();"
+            },
+            {
+              "name": "Named routes",
+              "explanation": "Giving a GoRoute a name lets you navigate to it by name instead of hardcoding its path string, which is safer against typos and path changes.",
+              "example": "GoRoute(path: '/settings', name: 'settings', builder: (context, state) => SettingsScreen())\n\n// navigate by name:\ncontext.goNamed('settings');"
+            }
+          ],
+          "practice": {
+            "title": "Splash, Login, Home Flow",
+            "description": "Build a three-screen app: Splash, Login, and Home.",
+            "builds_on_previous_practice": "Extends the GoRouter setup from Part 2, Module 1.",
+            "requirements": [
+              "Configure three GoRoutes: '/splash', '/login', and '/home', with initialLocation set to '/splash'.",
+              "On SplashScreen, after a short delay, use context.go('/login') to move to the login screen (replacing splash so back doesn't return to it).",
+              "On LoginScreen, use context.go('/home') on successful 'login' to move to Home, replacing Login on the stack.",
+              "From HomeScreen, add a button that uses context.push('/login') just to demonstrate push retains a back stack, then pop it with context.pop()."
+            ],
+            "hint": "Use context.go() for the splash->login->home flow (no back-stack desired) and context.push()/pop() only for the demonstration button."
+          }
+        },
+        {
+          "module_number": 3,
+          "title": "Passing Data Between Routes",
+          "concepts": [
+            {
+              "name": "Path parameters",
+              "explanation": "Path parameters are dynamic segments in a route's path (prefixed with ':'), letting one route definition handle many specific screens, such as different product IDs.",
+              "example": "GoRoute(\n  path: '/product/:id',\n  builder: (context, state) {\n    final id = state.pathParameters['id']!;\n    return ProductDetailsScreen(productId: id);\n  },\n)"
+            },
+            {
+              "name": "Query parameters",
+              "explanation": "Query parameters are optional key-value pairs appended to a URL after '?', useful for things like filters or sorting options that aren't part of the core path identity.",
+              "example": "context.go('/search?category=shoes&sort=price');\n\n// reading them:\nfinal category = state.uri.queryParameters['category'];"
+            },
+            {
+              "name": "Passing objects with extra",
+              "explanation": "The extra parameter lets you pass an entire Dart object (not just a string) directly to the destination route, useful for passing a full model object instead of re-fetching it by ID.",
+              "example": "context.push('/product-details', extra: selectedProduct);\n\n// reading it:\nfinal product = state.extra as Product;"
+            },
+            {
+              "name": "Accessing route data",
+              "explanation": "Inside a GoRoute's builder, the GoRouterState (commonly named state) exposes pathParameters, queryParameters (via state.uri), and extra, giving access to whatever data was passed during navigation.",
+              "example": "builder: (context, state) {\n  final id = state.pathParameters['id'];\n  final extraData = state.extra;\n  return DetailsScreen(id: id, data: extraData);\n}"
+            }
+          ],
+          "practice": {
+            "title": "Product List & Details",
+            "description": "Create a product list, open a details screen using a route parameter, and pass the full object using extra.",
+            "builds_on_previous_practice": "Extends the route configuration from Part 2, Module 2.",
+            "requirements": [
+              "Create a ProductListScreen showing a list of sample products.",
+              "Add a GoRoute at '/product/:id' for ProductDetailsScreen, reading the id from state.pathParameters.",
+              "When tapping a product, navigate with context.push('/product/${product.id}', extra: product).",
+              "In ProductDetailsScreen's builder, read the full product object from state.extra and display its full details (not just the id)."
+            ],
+            "hint": "The path parameter tells you which product, while extra avoids needing to look it up again from a list \u2014 both are commonly used together."
+          }
+        },
+        {
+          "module_number": 4,
+          "title": "Nested Navigation with ShellRoute",
+          "concepts": [
+            {
+              "name": "What is ShellRoute?",
+              "explanation": "ShellRoute wraps a set of child routes with a shared, persistent UI shell (like a Scaffold with a BottomNavigationBar), so that shell stays on screen while only the inner content changes as the user navigates between child routes.",
+              "example": "ShellRoute(\n  builder: (context, state, child) {\n    return ScaffoldWithNavBar(child: child);\n  },\n  routes: [\n    GoRoute(path: '/movies', builder: (context, state) => MoviesScreen()),\n    GoRoute(path: '/favorites', builder: (context, state) => FavoritesScreen()),\n  ],\n)"
+            },
+            {
+              "name": "Persistent Bottom Navigation",
+              "explanation": "Because the ShellRoute's builder wraps every child route, a BottomNavigationBar placed in that shell remains visible and in the same state across all child screens, rather than being rebuilt or hidden during navigation.",
+              "example": "class ScaffoldWithNavBar extends StatelessWidget {\n  final Widget child;\n  const ScaffoldWithNavBar({required this.child});\n\n  @override\n  Widget build(BuildContext context) {\n    return Scaffold(\n      body: child,\n      bottomNavigationBar: BottomNavigationBar(...),\n    );\n  }\n}"
+            },
+            {
+              "name": "Nested navigation",
+              "explanation": "ShellRoute supports its own nested routes, meaning each tab in the shell can have its own internal navigation stack (e.g. pushing a details screen within the 'Movies' tab) while the outer shell (nav bar) stays fixed.",
+              "example": "ShellRoute(\n  builder: (context, state, child) => ScaffoldWithNavBar(child: child),\n  routes: [\n    GoRoute(\n      path: '/movies',\n      builder: (context, state) => MoviesScreen(),\n      routes: [\n        GoRoute(path: 'details/:id', builder: (context, state) => MovieDetailsScreen()),\n      ],\n    ),\n  ],\n)"
+            },
+            {
+              "name": "When to use ShellRoute",
+              "explanation": "Use ShellRoute whenever multiple routes should share a persistent piece of UI \u2014 most commonly a bottom navigation bar or a side navigation drawer \u2014 that shouldn't be rebuilt or removed as the user moves between those routes.",
+              "example": "An app with Movies/Favorites/Profile tabs, where the bottom nav bar should always stay visible, is a textbook use case for ShellRoute."
+            }
+          ],
+          "practice": {
+            "title": "ShellRoute Conversion",
+            "description": "Convert a Bottom Navigation app into a ShellRoute implementation while keeping the navigation bar visible across screens.",
+            "builds_on_previous_practice": "Converts the Shopping App Tabs practice from Part 1, Module 3 into GoRouter's ShellRoute.",
+            "requirements": [
+              "Wrap the Home, Favorites, and Profile GoRoutes inside a single ShellRoute.",
+              "Implement the shell's builder to return a Scaffold containing a BottomNavigationBar and the given child widget as its body.",
+              "Wire the BottomNavigationBar's onTap to navigate using context.go() to each tab's path.",
+              "Confirm the navigation bar remains visible and correctly highlights the active tab as you move between Home, Favorites, and Profile."
+            ],
+            "hint": "The BottomNavigationBar's currentIndex should be derived from the current route path (e.g. by checking state.uri or GoRouterState.of(context).matchedLocation) rather than a manually tracked variable."
+          }
+        }
+      ]
+    }
+  ],
+  "final_mini_project": {
+    "title": "Movie Explorer",
+    "description": "Build a complete application using GoRouter that combines every navigation concept covered across both parts of the course.",
+    "requirements": [
+      "Splash Screen",
+      "Login Screen",
+      "Home Screen",
+      "Bottom Navigation with: Movies, Favorites, Profile",
+      "Movie Details screen using a route parameter",
+      "Settings screen using a named route",
+      "Pass the selected movie using extra",
+      "Use context.go() and context.push() appropriately",
+      "Implement the Bottom Navigation using ShellRoute so it remains visible while navigating between tabs"
+    ]
+  },
+  "concepts_covered": [
+    "Built-in Flutter navigation",
+    "Navigation stack",
+    "Bottom Navigation Bar",
+    "TabBar",
+    "GoRouter configuration",
+    "Named routes",
+    "Path & query parameters",
+    "Passing data between screens",
+    "Nested navigation with ShellRoute"
+  ]
+}
